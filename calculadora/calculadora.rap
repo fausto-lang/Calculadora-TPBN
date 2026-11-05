@@ -99,3 +99,8 @@ ProductVer4Range=0
 PTimer=1698156
 [Size]
 4=0,0,0,0
+2=0,0,0,0,0
+[Find]
+1="DialogBox"
+[Collapse]
+2=
