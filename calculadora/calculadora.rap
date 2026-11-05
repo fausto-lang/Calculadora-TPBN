@@ -1,0 +1,55 @@
+[Project]
+Assembler=fasm
+Type=Win32 App
+Description=calculadora
+Backup=$P\Bak\
+Group=1
+GroupExpand=1
+[Files]
+1=calculadora.Asm
+2=calculadora.Inc
+3=calculadora.Rc
+4=calculadora.dlg
+[MakeFiles]
+0=calculadora.rap
+1=calculadora.rc
+2=calculadora.asm
+3=calculadora.obj
+4=calculadora.res
+5=calculadora.exe
+6=calculadora.def
+7=calculadora.dll
+8=calculadora.txt
+9=calculadora.lib
+10=calculadora.mak
+[MakeDef]
+Menu=1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0
+1=4,O,GORC /r,1
+2=5,O,FASM,2,5
+3=0,
+4=0,0,,5
+5=
+6=
+7=0,0,"$E\OllyDbg",5
+11=4,O,GORC /r,1
+12=5,O,FASM,2,5
+13=0,
+14=0,0,,5
+15=
+16=
+17=0,0,"$E\OllyDbg",5
+[Resource]
+[StringTable]
+[Accel]
+[VerInf]
+[Group]
+Group=Added files,Assembly,Resources,Misc,Modules
+1=2
+2=2
+3=3
+4=3
+[AutoLoad]
+AutoLoad=
+[RADebugBP]
+2=
+1=
