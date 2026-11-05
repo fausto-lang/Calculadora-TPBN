@@ -4,8 +4,7 @@ entry inicio
 include 'Win32a.inc'
 
 ventana_1				equ	1
-ventana_operacion   	equ 1001 
-ventana_resultado   	equ 1002
+ventana_operacion   	equ 1001
 cero 					equ 1022
 uno 					equ 1014
 dos						equ	1013
@@ -33,6 +32,10 @@ acumulador 			dd 0
 numeroActual 		dd 0    
 operadorPendiente 	db 0    
 nuevoNumero 		db 1
+expresion       	rb 100
+pantalla        	rb 150
+posicion        	dd 0
+formato_pantalla 	db '%s', 13, 10, 13, 10, '0', 0
  
 section '.code' code readable executable
 
@@ -88,6 +91,14 @@ jCOMMAND:
     je cmdOcho
     cmp eax,nueve
     je cmdNueve
+    cmp eax,suma
+    je cmdSuma
+    cmp eax,resta
+    je cmdResta
+    cmp eax,multiplicacion
+    je cmdMultiplicacion
+    cmp eax,division
+    je cmdDivision
     cmp eax,borrar_btn 
     je cmdBorrar
     xor eax,eax
@@ -143,8 +154,29 @@ cmdNueve:
     mov eax,1
     jmp finish
     
+cmdSuma:    
+	stdcall AgregarCaracter, '+'    
+	mov eax, 1    
+	jmp finish
+	
+cmdResta:    
+	stdcall AgregarCaracter, '-'    
+	mov eax, 1    
+	jmp finish
+	
+cmdDivision:    
+	stdcall AgregarCaracter, '/'    
+	mov eax, 1    
+	jmp finish
+	
+cmdMultiplicacion:    
+	stdcall AgregarCaracter, 'x'    
+	mov eax, 1    
+	jmp finish
+    
+    
 cmdBorrar:
-	stdcall borrarTodo
+	stdcall BorrarTodo
 	mov eax,1
 	jmp finish
 	
@@ -162,21 +194,36 @@ finish:
 	ret
 endp
 
-proc AgregarDigito,digito    
-	cmp byte [nuevoNumero],1    
-	jne agregarContinuar    
-	mov dword [numeroActual],0    
-	mov byte [nuevoNumero],0
-agregarContinuar:    
-	mov eax,[numeroActual]    
-	imul eax,10    
-	add eax,[digito]    
-	mov [numeroActual],eax    
-	invoke SetDlgItemInt,[pWnd],ventana_operacion,[numeroActual],1    
+proc AgregarDigito, digito    
+	mov eax, [digito]    
+	add eax, '0'    
+	stdcall AgregarCaracter, eax    
 	ret
-	endp
+endp
 
-proc BorrarTodo    ; Reiniciar variables    mov dword [acumulador], 0    mov dword [numeroActual], 0    mov byte [operadorPendiente], 0    mov byte [nuevoNumero], 1    ; Limpiar pantalla de operacion    invoke SetDlgItemInt, [pWnd], ventana_operacion, 0, 1    ; Limpiar pantalla de resultado    invoke SetDlgItemInt, [pWnd], ventana_resultado, 0, 1    retendp
+proc AgregarCaracter, caracter
+    mov eax, [posicion]
+    cmp eax, 98
+    jge finalizarAgregar
+    mov ecx, [caracter]
+    mov [expresion + eax], cl
+    inc eax
+    mov [posicion], eax
+    mov byte [expresion + eax], 0
+    invoke wsprintf, pantalla, formato_pantalla, expresion
+    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
+finalizarAgregar:
+    ret
+
+endp
+
+proc BorrarTodo
+    mov dword [posicion], 0
+    mov byte [expresion], 0
+    invoke wsprintf, pantalla, formato_pantalla, expresion
+    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
+    ret
+endp
 
 section '.idata' import data readable writeable
   ;importamos solo los procedimientos basicos para abrir una ventana
@@ -187,11 +234,13 @@ section '.idata' import data readable writeable
 	  GetModuleHandle,'GetModuleHandleA',\
 	  ExitProcess,	  'ExitProcess'
 
-  import  user,\
-	  DialogBoxParam, 'DialogBoxParamA',\
-	  EndDialog,	  'EndDialog',\
-	  SendMessage,	  'SendMessageA',\
-	  SetDlgItemInt, 'SetDlgItemInt'
+  import user,\
+    DialogBoxParam, 'DialogBoxParamA',\
+    EndDialog,      'EndDialog',\
+    SendMessage,    'SendMessageA',\
+    SetDlgItemInt,  'SetDlgItemInt',\
+    SetDlgItemText, 'SetDlgItemTextA',\
+    wsprintf,       'wsprintfA'
   ;otra forma para importar los procedimientos importando archivos INC
   ;library kernel32,'KERNEL32.DLL',user32,'USER32.DLL',gdi32,'GDI32.DLL'
   ;include 'api\kernel32.inc'

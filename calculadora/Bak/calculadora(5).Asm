@@ -4,8 +4,7 @@ entry inicio
 include 'Win32a.inc'
 
 ventana_1				equ	1
-ventana_operacion   	equ 1001 
-ventana_resultado   	equ 1002
+ventana_operacion   	equ 1001
 cero 					equ 1022
 uno 					equ 1014
 dos						equ	1013
@@ -33,6 +32,8 @@ acumulador 			dd 0
 numeroActual 		dd 0    
 operadorPendiente 	db 0    
 nuevoNumero 		db 1
+expresion 			rb 100
+posicion  			dd 0
  
 section '.code' code readable executable
 
@@ -88,58 +89,94 @@ jCOMMAND:
     je cmdOcho
     cmp eax,nueve
     je cmdNueve
+    cmp eax,suma
+    je cmdSuma
+    cmp eax,resta
+    je cmdResta
+    cmp eax,multiplicacion
+    je cmdMultiplicacion
+    cmp eax,division
+    je cmdDivision
+    cmp eax,borrar_btn 
+    je cmdBorrar
     xor eax,eax
     jmp finish
 
 cmdCero:
-    invoke AgregarDigito, 0
+    stdcall  AgregarDigito, 0
     mov eax,1
     jmp finish
 
 cmdUno:
-    invoke AgregarDigito, 1
+    stdcall AgregarDigito, 1
     mov eax,1
     jmp finish
 
 cmdDos:
-    invoke AgregarDigito, 2
+    stdcall AgregarDigito, 2
     mov eax,1
     jmp finish
 
 cmdTres:
-    invoke AgregarDigito, 3
+    stdcall AgregarDigito, 3
     mov eax,1
     jmp finish
 
 cmdCuatro:
-    invoke AgregarDigito, 4
+    stdcall AgregarDigito, 4
     mov eax,1
     jmp finish
 
 cmdCinco:
-    invoke AgregarDigito, 5
+    stdcall AgregarDigito, 5
     mov eax,1
     jmp finish
 
 cmdSeis:
-    invoke AgregarDigito, 6
+    stdcall AgregarDigito, 6
     mov eax,1
     jmp finish
 
 cmdSiete:
-    invoke AgregarDigito, 7
+    stdcall AgregarDigito, 7
     mov eax,1
     jmp finish
 
 cmdOcho:
-    invoke AgregarDigito, 8
+    stdcall AgregarDigito, 8
     mov eax,1
     jmp finish
 
 cmdNueve:
-    invoke AgregarDigito, 9
+    stdcall AgregarDigito, 9
     mov eax,1
     jmp finish
+    
+cmdSuma:    
+	stdcall AgregarCaracter, '+'    
+	mov eax, 1    
+	jmp finish
+	
+cmdResta:    
+	stdcall AgregarCaracter, '-'    
+	mov eax, 1    
+	jmp finish
+	
+cmdDivision:    
+	stdcall AgregarCaracter, '/'    
+	mov eax, 1    
+	jmp finish
+	
+cmdMultiplicacion:    
+	stdcall AgregarCaracter, 'x'    
+	mov eax, 1    
+	jmp finish
+    
+    
+cmdBorrar:
+	stdcall BorrarTodo
+	mov eax,1
+	jmp finish
 	
 salir:
 	invoke SendMessage,[hWnd],WM_CLOSE,0,0
@@ -155,19 +192,49 @@ finish:
 	ret
 endp
 
-proc AgregarDigito,digito    
-	cmp byte [nuevoNumero],1    
-	jne agregarContinuar    
-	mov dword [numeroActual],0    
-	mov byte [nuevoNumero],0
-agregarContinuar:    
-	mov eax,[numeroActual]    
-	imul eax,10    
-	add eax,[digito]    
-	mov [numeroActual],eax    
-	invoke SetDlgItemInt,[pWnd],ventana_operacion,[numeroActual],1    
+proc AgregarDigito, digito    
+	mov eax, [digito]    
+	add eax, '0'    
+	stdcall AgregarCaracter, eax    
 	ret
-	endp
+endp
+
+proc AgregarCaracter, caracter
+    mov eax, [posicion]
+    cmp eax, 98
+    jge finalizarAgregar
+    mov ecx, [caracter]
+    mov [expresion + eax], cl
+    inc eax
+    mov [posicion], eax
+    mov byte [expresion + eax], 0
+    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
+    invoke SetDlgItemInt, [pWnd], ventana_resultado, 0, 1
+
+finalizarAgregar:
+    ret
+endp
+    mov eax, [posicion]
+    cmp eax, 98
+    jge finalizarAgregar
+    mov ecx, [caracter]
+    mov [expresion + eax], cl
+    inc eax
+    mov [posicion], eax
+    mov byte [expresion + eax], 0
+    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
+finalizarAgregar:
+    ret
+endp
+
+proc BorrarTodo
+    mov dword [posicion], 0
+    mov byte [expresion], 0
+    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
+    invoke SetDlgItemInt, [pWnd], ventana_resultado, 0, 1
+
+    ret
+endp
 
 section '.idata' import data readable writeable
   ;importamos solo los procedimientos basicos para abrir una ventana
@@ -182,7 +249,8 @@ section '.idata' import data readable writeable
 	  DialogBoxParam, 'DialogBoxParamA',\
 	  EndDialog,	  'EndDialog',\
 	  SendMessage,	  'SendMessageA',\
-	  SetDlgItemInt, 'SetDlgItemInt'
+	  SetDlgItemInt, 'SetDlgItemInt',\
+	  SetDlgItemText, 'SetDlgItemTextA'
   ;otra forma para importar los procedimientos importando archivos INC
   ;library kernel32,'KERNEL32.DLL',user32,'USER32.DLL',gdi32,'GDI32.DLL'
   ;include 'api\kernel32.inc'
