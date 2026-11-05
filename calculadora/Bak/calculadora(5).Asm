@@ -32,8 +32,10 @@ acumulador 			dd 0
 numeroActual 		dd 0    
 operadorPendiente 	db 0    
 nuevoNumero 		db 1
-expresion 			rb 100
-posicion  			dd 0
+expresion       	rb 100
+pantalla        	rb 150
+posicion        	dd 0
+formato_pantalla 	db '%s', 13, 10, 13, 10, 13, 10, 13, 10, '0', 0
  
 section '.code' code readable executable
 
@@ -98,6 +100,8 @@ jCOMMAND:
     cmp eax,division
     je cmdDivision
     cmp eax,borrar_btn 
+    je cmdBorrar
+    cmp eax,retroceder_btn 
     je cmdBorrar
     xor eax,eax
     jmp finish
@@ -178,6 +182,11 @@ cmdBorrar:
 	mov eax,1
 	jmp finish
 	
+cmdRetroceder:
+	stdcall BorrarTodo
+	mov eax,1
+	jmp finish
+	
 salir:
 	invoke SendMessage,[hWnd],WM_CLOSE,0,0
 	mov eax,1
@@ -208,31 +217,18 @@ proc AgregarCaracter, caracter
     inc eax
     mov [posicion], eax
     mov byte [expresion + eax], 0
-    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
-    invoke SetDlgItemInt, [pWnd], ventana_resultado, 0, 1
+    invoke wsprintf, pantalla, formato_pantalla, expresion
+    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
+finalizarAgregar:
+    ret
 
-finalizarAgregar:
-    ret
-endp
-    mov eax, [posicion]
-    cmp eax, 98
-    jge finalizarAgregar
-    mov ecx, [caracter]
-    mov [expresion + eax], cl
-    inc eax
-    mov [posicion], eax
-    mov byte [expresion + eax], 0
-    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
-finalizarAgregar:
-    ret
 endp
 
 proc BorrarTodo
     mov dword [posicion], 0
     mov byte [expresion], 0
-    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
-    invoke SetDlgItemInt, [pWnd], ventana_resultado, 0, 1
-
+    invoke wsprintf, pantalla, formato_pantalla, expresion
+    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
     ret
 endp
 
@@ -245,12 +241,13 @@ section '.idata' import data readable writeable
 	  GetModuleHandle,'GetModuleHandleA',\
 	  ExitProcess,	  'ExitProcess'
 
-  import  user,\
-	  DialogBoxParam, 'DialogBoxParamA',\
-	  EndDialog,	  'EndDialog',\
-	  SendMessage,	  'SendMessageA',\
-	  SetDlgItemInt, 'SetDlgItemInt',\
-	  SetDlgItemText, 'SetDlgItemTextA'
+  import user,\
+    DialogBoxParam, 'DialogBoxParamA',\
+    EndDialog,      'EndDialog',\
+    SendMessage,    'SendMessageA',\
+    SetDlgItemInt,  'SetDlgItemInt',\
+    SetDlgItemText, 'SetDlgItemTextA',\
+    wsprintf,       'wsprintfA'
   ;otra forma para importar los procedimientos importando archivos INC
   ;library kernel32,'KERNEL32.DLL',user32,'USER32.DLL',gdi32,'GDI32.DLL'
   ;include 'api\kernel32.inc'

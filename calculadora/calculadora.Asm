@@ -36,6 +36,7 @@ expresion       	rb 100
 pantalla        	rb 150
 posicion        	dd 0
 formato_pantalla 	db '%s', 13, 10, 13, 10, 13, 10, 13, 10, '0', 0
+pantalla_vacia db 13,10,13,10,13,10,13,10,'0',0
  
 section '.code' code readable executable
 
@@ -100,8 +101,6 @@ jCOMMAND:
     cmp eax,division
     je cmdDivision
     cmp eax,borrar_btn 
-    je cmdBorrar
-    cmp eax,retroceder_btn 
     je cmdBorrar
     xor eax,eax
     jmp finish
@@ -221,14 +220,12 @@ proc AgregarCaracter, caracter
     invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
 finalizarAgregar:
     ret
-
 endp
 
 proc BorrarTodo
     mov dword [posicion], 0
     mov byte [expresion], 0
-    invoke wsprintf, pantalla, formato_pantalla, expresion
-    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
+    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla_vacia
     ret
 endp
 

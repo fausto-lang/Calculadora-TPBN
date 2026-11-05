@@ -35,7 +35,7 @@ nuevoNumero 		db 1
 expresion       	rb 100
 pantalla        	rb 150
 posicion        	dd 0
-formato_pantalla 	db '%s', 13, 10, '0', 0
+formato_pantalla 	db '%s', 13, 10, 13, 10, 13, 10, 13, 10, '0', 0
  
 section '.code' code readable executable
 
@@ -176,6 +176,11 @@ cmdMultiplicacion:
     
     
 cmdBorrar:
+	stdcall BorrarTodo
+	mov eax,1
+	jmp finish
+	
+cmdRetroceder:
 	stdcall BorrarTodo
 	mov eax,1
 	jmp finish

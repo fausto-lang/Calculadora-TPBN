@@ -35,7 +35,7 @@ nuevoNumero 		db 1
 expresion       	rb 100
 pantalla        	rb 150
 posicion        	dd 0
-formato_pantalla 	db '%s', 13, 10, '0', 0
+formato_pantalla 	db '%s', 13, 10, 13, 10, 13, 10, 13, 10, '0', 0
  
 section '.code' code readable executable
 
@@ -180,6 +180,11 @@ cmdBorrar:
 	mov eax,1
 	jmp finish
 	
+cmdRetroceder:
+	stdcall BorrarTodo
+	mov eax,1
+	jmp finish
+	
 salir:
 	invoke SendMessage,[hWnd],WM_CLOSE,0,0
 	mov eax,1
@@ -234,12 +239,13 @@ section '.idata' import data readable writeable
 	  GetModuleHandle,'GetModuleHandleA',\
 	  ExitProcess,	  'ExitProcess'
 
-  import  user,\
-	  DialogBoxParam, 'DialogBoxParamA',\
-	  EndDialog,	  'EndDialog',\
-	  SendMessage,	  'SendMessageA',\
-	  SetDlgItemInt, 'SetDlgItemInt',\
-	  SetDlgItemText, 'SetDlgItemTextA'
+  import user,\
+    DialogBoxParam, 'DialogBoxParamA',\
+    EndDialog,      'EndDialog',\
+    SendMessage,    'SendMessageA',\
+    SetDlgItemInt,  'SetDlgItemInt',\
+    SetDlgItemText, 'SetDlgItemTextA',\
+    wsprintf,       'wsprintfA'
   ;otra forma para importar los procedimientos importando archivos INC
   ;library kernel32,'KERNEL32.DLL',user32,'USER32.DLL',gdi32,'GDI32.DLL'
   ;include 'api\kernel32.inc'

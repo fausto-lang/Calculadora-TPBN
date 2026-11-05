@@ -35,7 +35,7 @@ nuevoNumero 		db 1
 expresion       	rb 100
 pantalla        	rb 150
 posicion        	dd 0
-formato_pantalla 	db '%s', 13, 10, 13, 10, '0', 0
+formato_pantalla 	db '%s', 13, 10, 13, 10, 13, 10, 13, 10, '0', 0
  
 section '.code' code readable executable
 
@@ -180,6 +180,11 @@ cmdBorrar:
 	mov eax,1
 	jmp finish
 	
+cmdRetroceder:
+	stdcall BorrarTodo
+	mov eax,1
+	jmp finish
+	
 salir:
 	invoke SendMessage,[hWnd],WM_CLOSE,0,0
 	mov eax,1
@@ -218,8 +223,8 @@ finalizarAgregar:
 endp
 
 proc BorrarTodo
-    mov dword [posicion], 0
-    mov byte [expresion], 0
+    mov dword [posicion], 0    
+  	mov byte [expresion], 0    
     invoke wsprintf, pantalla, formato_pantalla, expresion
     invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
     ret

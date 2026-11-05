@@ -32,8 +32,10 @@ acumulador 			dd 0
 numeroActual 		dd 0    
 operadorPendiente 	db 0    
 nuevoNumero 		db 1
-expresion 			rb 100
-posicion  			dd 0
+expresion       	rb 100
+pantalla        	rb 150
+posicion        	dd 0
+formato_pantalla 	db '%s', 13, 10, '0', 0
  
 section '.code' code readable executable
 
@@ -208,19 +210,19 @@ proc AgregarCaracter, caracter
     inc eax
     mov [posicion], eax
     mov byte [expresion + eax], 0
-    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
+    invoke wsprintf, pantalla, formato_pantalla, expresion
+    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
 finalizarAgregar:
     ret
+
 endp
 
-proc BorrarTodo    
-	mov dword [acumulador], 0    
-	mov dword [numeroActual], 0    
-	mov byte [operadorPendiente], 0    
-	mov byte [nuevoNumero], 1        
-	invoke SetDlgItemInt, [pWnd], ventana_operacion, 0, 1    
-	invoke SetDlgItemInt, [pWnd], ventana_resultado, 0, 1    
-	ret
+proc BorrarTodo
+    mov dword [posicion], 0
+    mov byte [expresion], 0
+    invoke wsprintf, pantalla, formato_pantalla, expresion
+    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
+    ret
 endp
 
 section '.idata' import data readable writeable
@@ -236,7 +238,8 @@ section '.idata' import data readable writeable
 	  DialogBoxParam, 'DialogBoxParamA',\
 	  EndDialog,	  'EndDialog',\
 	  SendMessage,	  'SendMessageA',\
-	  SetDlgItemInt, 'SetDlgItemInt'
+	  SetDlgItemInt, 'SetDlgItemInt',\
+	  SetDlgItemText, 'SetDlgItemTextA'
   ;otra forma para importar los procedimientos importando archivos INC
   ;library kernel32,'KERNEL32.DLL',user32,'USER32.DLL',gdi32,'GDI32.DLL'
   ;include 'api\kernel32.inc'
