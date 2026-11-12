@@ -1,0 +1,10 @@
+# Copias de seguridad de RadASM
+Bak/
+
+# Archivos generados
+calculadora.exe
+calculadora.res
+
+# Archivos auxiliares de RadASM
+calculadora.rap
+calculadora.undo
