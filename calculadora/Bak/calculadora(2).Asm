@@ -3,253 +3,296 @@ entry inicio
 
 include 'Win32a.inc'
 
-ventana_1				equ	1
-ventana_operacion   	equ 1001
-cero 					equ 1022
-uno 					equ 1014
-dos						equ	1013
-tres 					equ	1012
-cuatro 					equ	1018
-cinco					equ	1017
-seis					equ	1016
-siete					equ	1010
-ocho					equ	1009
-nueve					equ	1008
-suma					equ	1011
-resta					equ	1015
-multiplicacion			equ	1007
-division				equ	1005
-modulo					equ	1006	
-punto 					equ 1021
-retroceder_btn			equ 1004
-borrar_btn   			equ	1003
-salir_btn				equ	1000
+ventana_1           equ 1
+ventana_operacion   equ 1001
+ventana_resultado   equ 1002
+
+cero                equ 1022
+uno                 equ 1014
+dos                 equ 1013
+tres                equ 1012
+cuatro              equ 1018
+cinco               equ 1017
+seis                equ 1016
+siete               equ 1010
+ocho                equ 1009
+nueve               equ 1008
+
+suma                equ 1011
+resta               equ 1015
+multiplicacion      equ 1007
+division            equ 1005
+punto				equ 1021
+porcentaje			equ 1006
+
+borrar_btn          equ 1003
+retroceder_btn      equ 1004
+salir_btn           equ 1000
+
 
 section '.data' data readable writeable
-Ist  				dd 0
-pWnd 				dd 0
-acumulador 			dd 0    
-numeroActual 		dd 0    
-operadorPendiente 	db 0    
-nuevoNumero 		db 1
-expresion       	rb 100
-pantalla        	rb 150
-posicion        	dd 0
-formato_pantalla 	db '%s', 13, 10, 13, 10, 13, 10, 13, 10, '0', 0
- 
+pWnd                dd 0
+posicion            dd 0
+expresion           rb 100
+resultado_texto     db '0', 0
+
+
 section '.code' code readable executable
 
 inicio:
-	invoke GetModuleHandle,0
-	mov [Ist],eax
-	invoke DialogBoxParam,eax,ventana_1,0,DlgProc,0 
-fin:
-	invoke ExitProcess,0
+    invoke GetModuleHandle, 0
+    invoke DialogBoxParam, eax, ventana_1, 0, DlgProc, 0
+    invoke ExitProcess, 0
 
-proc DlgProc,hWnd,uMsg,wParam,lParam
-	push edi esi ebx
-	
-	mov eax,[uMsg]
-	cmp	eax,WM_COMMAND
-	je	jCOMMAND
-	cmp	eax,WM_INITDIALOG
-	je	jINITDIALOG
-	cmp	eax,WM_CLOSE
-	je	jCLOSE
-	xor eax,eax
-	jmp finish
+proc DlgProc hWnd, uMsg, wParam, lParam
+    push ebx
+    mov eax, [uMsg]
+    cmp eax, WM_INITDIALOG
+    je inicializar
+    cmp eax, WM_COMMAND
+    je comando
+    cmp eax, WM_CLOSE
+    je cerrar
+    xor eax, eax
+    jmp finalizar
 
-jINITDIALOG:
-	mov eax,[hWnd]
-	mov [pWnd],eax
-	
-	mov eax,1
-	jmp finish
-	
-jCOMMAND:
-    mov eax,[wParam]
-    and eax,0FFFFh
-    cmp eax,salir_btn
-    je salir
-    cmp eax,cero
-    je cmdCero
-    cmp eax,uno
-    je cmdUno
-    cmp eax,dos
-    je cmdDos
-    cmp eax,tres
-    je cmdTres
-    cmp eax,cuatro
-    je cmdCuatro
-    cmp eax,cinco
-    je cmdCinco
-    cmp eax,seis
-    je cmdSeis
-    cmp eax,siete
-    je cmdSiete
-    cmp eax,ocho
-    je cmdOcho
-    cmp eax,nueve
-    je cmdNueve
-    cmp eax,suma
-    je cmdSuma
-    cmp eax,resta
-    je cmdResta
-    cmp eax,multiplicacion
-    je cmdMultiplicacion
-    cmp eax,division
-    je cmdDivision
-    cmp eax,borrar_btn 
-    je cmdBorrar
-    xor eax,eax
-    jmp finish
+inicializar:
+    mov eax, [hWnd]
+    mov [pWnd], eax
+    mov byte [expresion], 0
+    stdcall ActualizarPantallas
+    mov eax, 1
+    jmp finalizar
 
-cmdCero:
-    stdcall  AgregarDigito, 0
-    mov eax,1
-    jmp finish
+comando:
+    mov eax, [wParam]
+    and eax, 0FFFFh
+    cmp eax, salir_btn
+    je cerrar
 
-cmdUno:
+    cmp eax, cero
+    je digito_0
+
+    cmp eax, uno
+    je digito_1
+
+    cmp eax, dos
+    je digito_2
+
+    cmp eax, tres
+    je digito_3
+
+    cmp eax, cuatro
+    je digito_4
+
+    cmp eax, cinco
+    je digito_5
+
+    cmp eax, seis
+    je digito_6
+
+    cmp eax, siete
+    je digito_7
+
+    cmp eax, ocho
+    je digito_8
+
+    cmp eax, nueve
+    je digito_9
+
+    cmp eax, suma
+    je operador_suma
+
+    cmp eax, resta
+    je operador_resta
+
+    cmp eax, multiplicacion
+    je operador_multiplicacion
+
+    cmp eax, division
+    je operador_division
+    
+    cmp eax, porcentaje
+    je operador_porcentaje
+    
+    cmp eax, punto
+    je punto
+
+    cmp eax, borrar_btn
+    je borrar
+
+    cmp eax, retroceder_btn
+    je retroceder
+
+    xor eax, eax
+    jmp finalizar
+
+digito_0:
+    stdcall AgregarDigito, 0
+    jmp comando_procesado
+
+digito_1:
     stdcall AgregarDigito, 1
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdDos:
+digito_2:
     stdcall AgregarDigito, 2
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdTres:
+digito_3:
     stdcall AgregarDigito, 3
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdCuatro:
+digito_4:
     stdcall AgregarDigito, 4
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdCinco:
+digito_5:
     stdcall AgregarDigito, 5
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdSeis:
+digito_6:
     stdcall AgregarDigito, 6
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdSiete:
+digito_7:
     stdcall AgregarDigito, 7
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdOcho:
+digito_8:
     stdcall AgregarDigito, 8
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
 
-cmdNueve:
+digito_9:
     stdcall AgregarDigito, 9
-    mov eax,1
-    jmp finish
+    jmp comando_procesado
+
+operador_suma:
+    stdcall AgregarOperador, '+'
+    jmp comando_procesado
+
+operador_resta:
+    stdcall AgregarOperador, '-'
+    jmp comando_procesado
+
+operador_multiplicacion:
+    stdcall AgregarOperador, 'x'
+    jmp comando_procesado
+
+operador_division:
+    stdcall AgregarOperador, '/'
+    jmp comando_procesado
     
-cmdSuma:    
-	stdcall AgregarCaracter, '+'    
-	mov eax, 1    
-	jmp finish
-	
-cmdResta:    
-	stdcall AgregarCaracter, '-'    
-	mov eax, 1    
-	jmp finish
-	
-cmdDivision:    
-	stdcall AgregarCaracter, '/'    
-	mov eax, 1    
-	jmp finish
-	
-cmdMultiplicacion:    
-	stdcall AgregarCaracter, 'x'    
-	mov eax, 1    
-	jmp finish
+operador_porcentaje:
+    stdcall AgregarOperador, '%'
+    jmp comando_procesado
     
-    
-cmdBorrar:
-	stdcall BorrarTodo
-	mov eax,1
-	jmp finish
-	
-cmdRetroceder:
-	stdcall BorrarTodo
-	mov eax,1
-	jmp finish
-	
-salir:
-	invoke SendMessage,[hWnd],WM_CLOSE,0,0
-	mov eax,1
-	jmp finish
-	
-jCLOSE:	
-	invoke EndDialog,[hWnd],0
-	mov eax,1
-	
-finish:
-	pop ebx esi edi
-	ret
+punto:
+    stdcall AgregarOperador, '.'
+    jmp comando_procesado
+
+borrar:
+    stdcall BorrarTodo
+    jmp comando_procesado
+
+retroceder:
+    stdcall Retroceder
+    jmp comando_procesado
+
+comando_procesado:
+    mov eax, 1
+    jmp finalizar
+
+cerrar:
+    invoke EndDialog, [hWnd], 0
+    mov eax, 1
+
+finalizar:
+    pop ebx
+    ret
+
 endp
 
-proc AgregarDigito, digito    
-	mov eax, [digito]    
-	add eax, '0'    
-	stdcall AgregarCaracter, eax    
-	ret
-endp
-
-proc AgregarCaracter, caracter
+proc AgregarDigito digito
     mov eax, [posicion]
     cmp eax, 98
-    jge finalizarAgregar
-    mov ecx, [caracter]
+    jge terminar_digito
+    mov ecx, [digito]
+    add ecx, '0'
     mov [expresion + eax], cl
     inc eax
     mov [posicion], eax
     mov byte [expresion + eax], 0
-    invoke wsprintf, pantalla, formato_pantalla, expresion
-    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
-finalizarAgregar:
-    ret
+    stdcall ActualizarPantallas
 
+terminar_digito:
+    ret
+endp
+
+proc AgregarOperador operador    
+	mov eax, [posicion]    
+	cmp eax, 0    
+	je terminar_operador    
+	mov cl, [expresion + eax - 1]    
+	cmp cl, '+'    
+	je terminar_operador    
+	cmp cl, '-'    
+	je terminar_operador    
+	cmp cl, 'x'    
+	je terminar_operador    
+	cmp cl, '/'    
+	je terminar_operador    
+	cmp eax, 98    
+	jge terminar_operador    
+	mov ecx, [operador]    
+	mov [expresion + eax], cl    
+	inc eax    
+	mov [posicion], eax    
+	mov byte [expresion + eax], 0    
+	stdcall ActualizarPantallas
+	terminar_operador:    
+	ret    
+	
 endp
 
 proc BorrarTodo
-    mov dword [posicion], 0    
-  	mov byte [expresion], 0    
-    invoke wsprintf, pantalla, formato_pantalla, expresion
-    invoke SetDlgItemText, [pWnd], ventana_operacion, pantalla
+    mov dword [posicion], 0
+    mov byte [expresion], 0
+    stdcall ActualizarPantallas
+    ret
+endp
+
+proc Retroceder
+    mov eax, [posicion]
+    cmp eax, 0
+    je terminar_retroceder
+    dec eax
+    mov [posicion], eax
+    mov byte [expresion + eax], 0
+    stdcall ActualizarPantallas
+
+terminar_retroceder:
+    ret
+endp
+
+proc ActualizarPantallas
+    invoke SetDlgItemText, [pWnd], ventana_operacion, expresion
+    invoke SetDlgItemText, [pWnd], ventana_resultado, resultado_texto
     ret
 endp
 
 section '.idata' import data readable writeable
-  ;importamos solo los procedimientos basicos para abrir una ventana
-  library kernel, 'KERNEL32.DLL',\
-	  user,   'USER32.DLL'
 
-  import  kernel,\
-	  GetModuleHandle,'GetModuleHandleA',\
-	  ExitProcess,	  'ExitProcess'
+library kernel, 'KERNEL32.DLL', \
+        user,   'USER32.DLL'
 
-  import user,\
-    DialogBoxParam, 'DialogBoxParamA',\
-    EndDialog,      'EndDialog',\
-    SendMessage,    'SendMessageA',\
-    SetDlgItemInt,  'SetDlgItemInt',\
-    SetDlgItemText, 'SetDlgItemTextA',\
-    wsprintf,       'wsprintfA'
-  ;otra forma para importar los procedimientos importando archivos INC
-  ;library kernel32,'KERNEL32.DLL',user32,'USER32.DLL',gdi32,'GDI32.DLL'
-  ;include 'api\kernel32.inc'
-  ;include 'api\user32.inc'
-  ;include 'api\gdi32.inc'
+import kernel, \
+       GetModuleHandle, 'GetModuleHandleA', \
+       ExitProcess,     'ExitProcess'
+
+import user, \
+       DialogBoxParam, 'DialogBoxParamA', \
+       EndDialog,      'EndDialog', \
+       SetDlgItemText, 'SetDlgItemTextA'
 
 section '.rsrc' resource from 'calculadora.res' data readable
