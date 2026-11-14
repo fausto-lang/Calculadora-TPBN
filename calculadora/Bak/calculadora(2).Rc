@@ -1,0 +1,2 @@
+#include "Res/calculadoraDlg.rc"
+#include <Res\calculadoraDlg.rc>
